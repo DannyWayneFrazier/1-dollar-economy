@@ -58,16 +58,25 @@
             <div id="bank-status" class="status-msg"></div>
         </div>
 
-     <!-- LIVE MARKETPLACE WITH FRACTIONAL TRADING & HUMAN PROTECTIONS -->
+        <!-- LIVE FLEXIBLE MARKETPLACE -->
         <div class="box">
-            <h2>🔄 LIVE MARKETPLACE</h2>
-            <p>Rules: Trade fractional slices of dollars freely. 3-Second hard human cooldown enforced.</p>
-            <p>Current Market Valuation: <strong>0.10 Dollars for 0.45 Credits</strong></p>
+            <h2>🔄 LIVE MARKETPLACE (OPEN TRADING)</h2>
+            <p>Rules: Input any custom fraction to buy/sell. 3-Second hard human cooldown enforced.</p>
             
-            <button id="buy-btn">BUY 0.10 DOLLARS FOR 0.45 CREDITS</button>
-            <button id="sell-btn">SELL 0.10 DOLLARS FOR 0.45 CREDITS</button>
+            <div style="margin-bottom: 12px;">
+                <label>Coin Amount (Dollars):</label><br>
+                <input type="number" id="trade-coin-amount" step="0.01" min="0.01" placeholder="e.g. 0.05" style="margin-top:5px; width:200px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>Credit Price:</label><br>
+                <input type="number" id="trade-credit-amount" step="0.01" min="0.01" placeholder="e.g. 0.10" style="margin-top:5px; width:200px;">
+            </div>
+
+            <button id="buy-btn">BUY COINS WITH CREDITS</button>
+            <button id="sell-btn">SELL COINS FOR CREDITS</button>
             <div id="market-status" class="status-msg"></div>
         </div>
+
         <!-- PERMANENT LEADERBOARD -->
         <div class="box">
             <h2>🏆 PERMANENT SCOREBOARD (RUNS FOREVER)</h2>
@@ -134,7 +143,7 @@
 
         const bannedDomains = ["10minutemail.com", "mailinator.com", "trashmail.com", "sharklasers.com", "guerrillamailblock.com", "tempmail.com"];
 
-        // Attach event listeners after DOM loads
+        // Attach Event Listeners safely after DOM loads
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('signup-submit-btn').addEventListener('click', processRegistration);
             document.getElementById('liquidate-submit-btn').addEventListener('click', cloudLiquidate);
@@ -225,11 +234,17 @@
 
         async function executeHumanTrade(type) {
             let marketStatus = document.getElementById('market-status');
-            let verify = confirm("🤖 HUMAN CHECK: Press OK to authorize marketplace trade execution.");
-            if(!verify) return;
+            let coinInput = parseFloat(document.getElementById('trade-coin-amount').value);
+            let creditInput = parseFloat(document.getElementById('trade-credit-amount').value);
 
-            const tradeCoinValue = 0.10;
-            const tradeCreditCost = 0.45;
+            if (isNaN(coinInput) || coinInput <= 0 || isNaN(creditInput) || creditInput <= 0) {
+                marketStatus.innerText = "❌ Error: Please enter valid positive amounts for both fields.";
+                return;
+            }
+
+            let verify = confirm(`🤖 HUMAN CHECK: Confirm ${type.toUpperCase()} order for ${coinInput.toFixed(2)} Dollars using ${creditInput.toFixed(2)} Credits?`);
+            if (!verify) return;
+
             const playerRef = doc(db, "players", activeUserDoc);
 
             try {
@@ -239,20 +254,22 @@
                     let cCredits = sfDoc.data().credits;
 
                     if (type === 'buy') {
-                        if (cCredits < tradeCreditCost) throw new Error("Insufficient Credits.");
+                        if (cCredits < creditInput) throw new Error(`Insufficient Credits! You need ${creditInput.toFixed(2)} credits.`);
                         transaction.update(playerRef, { 
-                            coins: parseFloat((cCoins + tradeCoinValue).toFixed(2)), 
-                            credits: parseFloat((cCredits - tradeCreditCost).toFixed(2)) 
+                            coins: parseFloat((cCoins + coinInput).toFixed(2)), 
+                            credits: parseFloat((cCredits - creditInput).toFixed(2)) 
                         });
                     } else if (type === 'sell') {
-                        if (cCoins < tradeCoinValue) throw new Error("Insufficient Coins.");
+                        if (cCoins < coinInput) throw new Error(`Insufficient Coins! You only have ${cCoins.toFixed(2)} dollars.`);
                         transaction.update(playerRef, { 
-                            coins: parseFloat((cCoins - tradeCoinValue).toFixed(2)), 
-                            credits: parseFloat((cCredits + tradeCreditCost).toFixed(2)) 
+                            coins: parseFloat((cCoins - coinInput).toFixed(2)), 
+                            credits: parseFloat((cCredits + creditInput).toFixed(2)) 
                         });
                     }
                 });
-                marketStatus.innerText = "✅ Trade Executed!";
+                marketStatus.innerText = "✅ Trade Executed Successfully!";
+                document.getElementById('trade-coin-amount').value = "";
+                document.getElementById('trade-credit-amount').value = "";
                 startMarketCooldown();
                 checkGameOver();
             } catch (e) {
