@@ -18,12 +18,16 @@
         .status-msg { color: #ffff00; font-weight: bold; margin-top: 10px; min-height: 20px; }
         hr { border: 0; border-top: 1px dashed #00ff00; margin: 20px 0; }
     </style>
+
+    <!-- UNIFIED COMPAT SCRIPTS (Prevents Browser Crashes) -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
     <h1>💵 THE $1 DOLLAR ECONOMY (LIVE ENGINE) 💵</h1>
     <p>===========================================================================</p>
-    <p>System Status: Online | Core Model: No Microtransactions | Database Shields: Active</p>
+    <p>System Status: Online | Core Model: No Microtransactions | Database Shields: Ready</p>
     <p>===========================================================================</p>
 
     <!-- SIGN UP & ANTI-CHEAT INTERFACE -->
@@ -36,10 +40,10 @@
         <label style="display:block;">Email Address:</label>
         <input type="email" id="reg-email" placeholder="e.g. human@gmail.com" style="width:280px; display:block; margin-bottom:15px;">
         
-        <button id="signup-submit-btn">PAY $1 & CREATE ACCOUNT</button>
+        <button onclick="processRegistration()">PAY $1 & CREATE ACCOUNT</button>
         <div id="auth-status" class="status-msg"></div>
     </div>
-    <!-- MAIN INTERACTIVE HUB (UNLOCKED VIA LIVE LOGIN) -->
+    <!-- MAIN INTERACTIVE HUB (UNLOCKED VIA LIVE PAYPAL REDIRECT) -->
     <div id="game-container" style="display:none;">
         <div class="box">
             <h2>👋 USER HUB: <span id="display-user">Player</span></h2>
@@ -53,7 +57,7 @@
             <h2 style="color: #ffff00;">⚡ SYSTEM LIQUIDATION BANK</h2>
             <p>Need cash to trade? Input a fraction of a Dollar to destroy and convert into Credits (1:1 Ratio).</p>
             <input type="number" id="liquidate-amount" step="0.01" min="0.01" max="1.00" placeholder="e.g. 0.50">
-            <button id="liquidate-submit-btn" style="background:#ffff00; box-shadow:2px 2px 0px #555500;">LIQUIDATE DOLLAR FRACTION</button>
+            <button onclick="cloudLiquidate()" style="background:#ffff00; box-shadow:2px 2px 0px #555500;">LIQUIDATE DOLLAR FRACTION</button>
             <div id="bank-status" class="status-msg"></div>
         </div>
 
@@ -63,15 +67,15 @@
             <p>Rules: Trade fractional slices of dollars freely. 3-Second hard human cooldown enforced.</p>
             <p>Current Market Valuation: <strong>0.10 Dollars for 0.45 Credits</strong></p>
             
-            <button id="buy-btn">BUY 0.10 DOLLARS FOR 0.45 CREDITS</button>
-            <button id="sell-btn">SELL 0.10 DOLLARS FOR 0.45 CREDITS</button>
+            <button id="buy-btn" onclick="executeHumanTrade('buy')">BUY 0.10 DOLLARS FOR 0.45 CREDITS</button>
+            <button id="sell-btn" onclick="executeHumanTrade('sell')">SELL 0.10 DOLLARS FOR 0.45 CREDITS</button>
             <div id="market-status" class="status-msg"></div>
         </div>
 
         <!-- PERMANENT LEADERBOARD -->
         <div class="box">
             <h2>🏆 PERMANENT SCOREBOARD (RUNS FOREVER)</h2>
-            <input type="text" id="user-search" placeholder="Search usernames to find rank..." style="width:300px; margin-bottom:15px;">
+            <input type="text" id="user-search" placeholder="Search usernames to find rank..." onkeyup="searchBoard()" style="width:300px; margin-bottom:15px;">
             
             <table id="board-table">
                 <thead>
@@ -91,7 +95,7 @@
         <h2>💀 TRUE GAME OVER 💀</h2>
         <p>Your account possesses <strong>0.00 Dollars</strong> and <strong>0.00 Credits</strong>.</p>
         <p>You have been completely wiped from the global economic market balance sheets.</p>
-        <button id="respawn-btn" style="background:#ff0000; color:#000; box-shadow: 2px 2px 0px #550000;">RESPAWN (Simulate New $1 Account Creation)</button>
+        <button onclick="respawnSimulation()" style="background:#ff0000; color:#000; box-shadow: 2px 2px 0px #550000;">RESPAWN (Simulate New $1 Account Creation)</button>
     </div>
 
     <hr>
@@ -102,45 +106,26 @@
         <h3>What exactly is this website?</h3>
         <p>This platform is a closed-loop internet economy simulation game called The $1 Dollar Economy. The goal is to compete against real humans globally to climb the ranks and dominate the permanent leaderboard by accumulating the most virtual "Dollars."</p>
     </div>
-
-    <!-- OFFICIAL LEGAL DISCLOSURE BLOCK -->
-    <div style="font-size: 11px; color: #666666; text-align: justify; padding: 10px; font-family: monospace;">
-        <strong>LEGAL DISCLOSURE & TERMS OF SERVICE (ToS):</strong><br>
-        1. NATURE OF THE PLATFORM: This website is solely an entertainment-based, virtual economy simulation game.<br>
-        2. NO REAL-WORLD FINANCIAL VALUE: All virtual assets within the game ecosystem hold ABSOLUTELY NO REAL-WORLD MONETARY VALUE.
-    </div>
-    <!-- MODERN MODULAR FIREBASE CORE PIPELINES (VERSION 12 COMPLIANT) -->
-    <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getFirestore, doc, setDoc, onSnapshot, runTransaction } from "https://gstatic.com";
-
-        // Danny's Direct App Configuration Object Coordinates
+    <script>
+        // Danny's Live Direct Cloud Connection Parameters
         const firebaseConfig = {
             apiKey: "AIzaSyAxvva22I1L2XxKkERSEtDps457v3Iu8OY",
-            authDomain: "dollar-economy.firebaseapp.com",
+            authDomain: "://firebaseapp.com",
             projectId: "dollar-economy",
             storageBucket: "dollar-economy.firebasestorage.app",
             messagingSenderId: "1092564018181",
             appId: "1:1092564018181:web:f348fb425b805301b7a86c"
         };
 
-        // Initialize Live Systems
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Fire initialization securely
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         let coins = 1.00;
         let credits = 0.00;
         let activeUserDoc = "";
 
         const bannedDomains = ["10minutemail.com", "mailinator.com", "trashmail.com", "sharklasers.com", "guerrillamailblock.com", "tempmail.com"];
-
-        // FORCE BUTTON HOOK LINKS (Bypasses old script conflicts)
-        document.getElementById('signup-submit-btn').addEventListener('click', processRegistration);
-        document.getElementById('liquidate-submit-btn').addEventListener('click', cloudLiquidate);
-        document.getElementById('buy-btn').addEventListener('click', () => executeHumanTrade('buy'));
-        document.getElementById('sell-btn').addEventListener('click', () => executeHumanTrade('sell'));
-        document.getElementById('respawn-btn').addEventListener('click', respawnSimulation);
-        document.getElementById('user-search').addEventListener('keyup', searchBoard);
 
         function processRegistration() {
             const username = document.getElementById('reg-username').value.trim();
@@ -158,24 +143,25 @@
                 return;
             }
 
-            status.innerText = "💸 Accessing Database Gateway Vault...";
+            status.innerText = "💸 Vault Connected! Generating your Cloud Wallet data...";
 
-            setTimeout(async () => {
-                try {
-                    await setDoc(doc(db, "players", username), {
-                        username: username,
-                        email: email,
-                        coins: 1.00,
-                        credits: 0.00,
-                        timestamp: new Date()
-                    });
-                    status.innerText = "✅ Success! Account generated.";
+            setTimeout(() => {
+                db.collection("players").doc(username).set({
+                    username: username,
+                    email: email,
+                    coins: 1.00,
+                    credits: 0.00,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    status.innerText = "✅ Success! Live account active.";
                     activeUserDoc = username;
                     loadUserHub(username);
-                } catch (error) {
-                    status.innerText = "❌ Connection Fault: " + error.message;
-                }
-            }, 500);
+                })
+                .catch((error) => {
+                    status.innerText = "❌ Database Vault Locked. Check your Firebase Rules tab! Details: " + error.message;
+                });
+            }, 1000);
         }
 
         function loadUserHub(username) {
@@ -183,8 +169,8 @@
             document.getElementById('game-container').style.display = 'block';
             document.getElementById('display-user').innerText = username;
 
-            onSnapshot(doc(db, "players", username), (docSnapshot) => {
-                if (docSnapshot.exists()) {
+            db.collection("players").doc(username).onSnapshot((docSnapshot) => {
+                if (docSnapshot.exists) {
                     const data = docSnapshot.data();
                     coins = data.coins;
                     credits = data.credits;
@@ -194,7 +180,7 @@
             });
         }
 
-        async function cloudLiquidate() {
+        function cloudLiquidate() {
             let inputField = document.getElementById('liquidate-amount');
             let amount = parseFloat(inputField.value);
             let bankStatus = document.getElementById('bank-status');
@@ -204,40 +190,36 @@
                 return;
             }
 
-            const playerRef = doc(db, "players", activeUserDoc);
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const sfDoc = await transaction.get(playerRef);
-                    let cCoins = sfDoc.data().coins;
-                    let cCredits = sfDoc.data().credits;
-                    
+            const playerRef = db.collection("players").doc(activeUserDoc);
+            db.runTransaction((transaction) => {
+                return transaction.get(playerRef).then((playerDoc) => {
+                    let currentCoins = playerDoc.data().coins;
+                    let currentCredits = playerDoc.data().credits;
                     transaction.update(playerRef, {
-                        coins: parseFloat((cCoins - amount).toFixed(2)),
-                        credits: parseFloat((cCredits + amount).toFixed(2))
+                        coins: parseFloat((currentCoins - amount).toFixed(2)),
+                        credits: parseFloat((currentCredits + amount).toFixed(2))
                     });
                 });
+            }).then(() => {
                 bankStatus.innerText = "⚡ Success! Balances updated.";
                 inputField.value = "";
                 checkGameOver();
-            } catch (e) {
-                bankStatus.innerText = "❌ Error: " + e.message;
-            }
+            });
         }
 
-        async function executeHumanTrade(type) {
+        function executeHumanTrade(type) {
             let marketStatus = document.getElementById('market-status');
             let verify = confirm("🤖 HUMAN CHECK: Press OK to authorize marketplace trade execution.");
             if(!verify) return;
 
             const tradeCoinValue = 0.10;
             const tradeCreditCost = 0.45;
-            const playerRef = doc(db, "players", activeUserDoc);
+            const playerRef = db.collection("players").doc(activeUserDoc);
 
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const sfDoc = await transaction.get(playerRef);
-                    let cCoins = sfDoc.data().coins;
-                    let cCredits = sfDoc.data().credits;
+            db.runTransaction((transaction) => {
+                return transaction.get(playerRef).then((playerDoc) => {
+                    let cCoins = playerDoc.data().coins;
+                    let cCredits = playerDoc.data().credits;
 
                     if (type === 'buy' && cCredits >= tradeCreditCost) {
                         transaction.update(playerRef, { coins: cCoins + tradeCoinValue, credits: cCredits - tradeCreditCost });
@@ -245,11 +227,10 @@
                         transaction.update(playerRef, { coins: cCoins - tradeCoinValue, credits: cCredits + tradeCreditCost });
                     }
                 });
+            }).then(() => {
                 startMarketCooldown();
                 checkGameOver();
-            } catch (e) {
-                marketStatus.innerText = "❌ Database Fault: " + e.message;
-            }
+            });
         }
 
         function startMarketCooldown() {
